@@ -217,7 +217,7 @@ export class CdkStack extends cdk.Stack {
             },
             commands: [
               'cd client',
-              'yarn install',
+              'yarn',
               'npm i -g gatsby'
             ],
           },
@@ -226,7 +226,7 @@ export class CdkStack extends cdk.Stack {
           },
         },
         artifacts: {
-          'base-directory': './public',
+          'base-directory': 'public',
           files: [
             '**/*'
           ],
@@ -247,9 +247,8 @@ export class CdkStack extends cdk.Stack {
             },
             commands: [
               'cd CDK',
-              'ls',
               'cd lambda',
-              "npm i"
+              "yarn"
             ]
           },
           build: {
@@ -298,12 +297,6 @@ export class CdkStack extends cdk.Stack {
           stageName: 'Build',
           actions: [
             new CodePipelineAction.CodeBuildAction({
-              actionName: 'LAMBDA_Build',
-              project: lambdaBuild,
-              input: sourceOutput,
-              outputs: [lambdaBuildOutput],
-            }),
-            new CodePipelineAction.CodeBuildAction({
               actionName: 's3_Build',
               project: s3Build,
               input: sourceOutput,
@@ -314,6 +307,12 @@ export class CdkStack extends cdk.Stack {
               project: cdkBuild,
               input: sourceOutput,
               outputs: [cdkBuildOutput],
+            }),
+            new CodePipelineAction.CodeBuildAction({
+              actionName: 'LAMBDA_Build',
+              project: lambdaBuild,
+              input: sourceOutput,
+              outputs: [lambdaBuildOutput],
             }),
           ],
         },

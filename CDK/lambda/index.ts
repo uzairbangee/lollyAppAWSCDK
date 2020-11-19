@@ -19,6 +19,8 @@ type AppSyncEvent = {
 }
 
 exports.handler = async (event: AppSyncEvent) => {
+
+    const codepipeline = new AWS.CodePipeline();
     const data = {
         ...event.arguments,
         id: shortid.generate()
@@ -31,6 +33,16 @@ exports.handler = async (event: AppSyncEvent) => {
     try{
         const result = await client.put(params).promise();
         console.log(result);
+        codepipeline.startPipelineExecution({
+            name: "CdkStack-LollyPipeline196A152A-VPZ92NC3OQQJ"
+        }, function(err : any, res : any) {
+            if (err) {
+                console.log(err, err.stack);
+            }
+            else {
+                console.log(res);
+            }
+        });
         return data;
     }
     catch(err) {

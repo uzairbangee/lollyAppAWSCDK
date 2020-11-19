@@ -265,7 +265,7 @@ export class CdkStack extends cdk.Stack {
 
     const sourceOutput = new CodePipeline.Artifact();
     // const cdkBuildOutput = new CodePipeline.Artifact('CdkBuildOutput');
-    const s3BuildOutput = new CodePipeline.Artifact('Ls3BuildOutput');
+    const s3BuildOutput = new CodePipeline.Artifact();
     // const lambdaBuildOutput = new CodePipeline.Artifact('lambdaBuildOutput');
 
     // const code = codecommit.Repository.fromRepositoryName(this, 'ImportedRepo', "lollyAppAWSCDK");
@@ -291,7 +291,7 @@ export class CdkStack extends cdk.Stack {
           stageName: 'Build',
           actions: [
             new CodePipelineAction.CodeBuildAction({
-              actionName: 's3_Build',
+              actionName: 's3Build',
               project: s3Build,
               input: sourceOutput,
               outputs: [s3BuildOutput],
@@ -314,10 +314,9 @@ export class CdkStack extends cdk.Stack {
           stageName: 'Deploy',
           actions: [
             new CodePipelineAction.S3DeployAction({
-              actionName: 'Website',
+              actionName: 's3Build',
               input: s3BuildOutput,
               bucket: myBucket,
-              
             }),
           ],
         },

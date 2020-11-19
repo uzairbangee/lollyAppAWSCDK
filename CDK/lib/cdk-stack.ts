@@ -174,37 +174,37 @@ export class CdkStack extends cdk.Stack {
       value: dist.domainName
     });
 
-    const cdkBuild = new CodeBuild.PipelineProject(this, 'CdkBuild', {
-      buildSpec: CodeBuild.BuildSpec.fromObject({
-        version: '0.2',
-        phases: {
-          install: {
-            "runtime-versions": {
-              "nodejs": 10
-            },
-            commands: [
-              'cd CDK',
-              'yarn'
-            ],
-          },
-          build: {
-            commands: [
-              'npm run build',
-              'npm run cdk synth -- -o dist'
-            ],
-          },
-        },
-        artifacts: {
-          'base-directory': 'dist',
-          files: [
-            'LambdaStack.template.json',
-          ],
-        },
-      }),
-      environment: {
-        buildImage: CodeBuild.LinuxBuildImage.STANDARD_2_0,
-      },
-    });
+    // const cdkBuild = new CodeBuild.PipelineProject(this, 'CdkBuild', {
+    //   buildSpec: CodeBuild.BuildSpec.fromObject({
+    //     version: '0.2',
+    //     phases: {
+    //       install: {
+    //         "runtime-versions": {
+    //           "nodejs": 10
+    //         },
+    //         commands: [
+    //           'cd CDK',
+    //           'yarn'
+    //         ],
+    //       },
+    //       build: {
+    //         commands: [
+    //           'npm run build',
+    //           'npm run cdk synth -- -o dist'
+    //         ],
+    //       },
+    //     },
+    //     artifacts: {
+    //       'base-directory': 'dist',
+    //       files: [
+    //         'LambdaStack.template.json',
+    //       ],
+    //     },
+    //   }),
+    //   environment: {
+    //     buildImage: CodeBuild.LinuxBuildImage.STANDARD_2_0,
+    //   },
+    // });
 
 
     const s3Build = new CodeBuild.PipelineProject(this, 's3Build', {
@@ -222,14 +222,15 @@ export class CdkStack extends cdk.Stack {
             ],
           },
           build: {
-            commands: 'gatsby build',
+            commands: [
+              'gatsby build',
+              'ls'
+            ],
           },
         },
         artifacts: {
           'base-directory': 'public',
-          files: [
-            '**/*'
-          ],
+          "discard-paths": "yes"
         },
       }),
       environment: {
@@ -237,42 +238,35 @@ export class CdkStack extends cdk.Stack {
       },
     });
 
-    const lambdaBuild = new CodeBuild.PipelineProject(this, "LambdaBuild", {
-      buildSpec: CodeBuild.BuildSpec.fromObject({
-        version: "0.2",
-        phases: {
-          install: {
-            "runtime-versions": {
-              "nodejs": 10
-            },
-            commands: [
-              'cd CDK',
-              'cd lambda',
-              "yarn"
-            ]
-          },
-          build: {
-            commands: "npm run build"
-          }
-        },
-        artifacts: {
-          "base-directory": "lambda",
-          files: [
-            "build/**/*",
-            "node_modules/**/*",
-            "@types"
-          ]
-        }
-      }),
-      environment: {
-        buildImage: CodeBuild.LinuxBuildImage.STANDARD_4_0
-      }
-    });
+    // const lambdaBuild = new CodeBuild.PipelineProject(this, "LambdaBuild", {
+    //   buildSpec: CodeBuild.BuildSpec.fromObject({
+    //     version: "0.2",
+    //     phases: {
+    //       install: {
+    //         "runtime-versions": {
+    //           "nodejs": 10
+    //         },
+    //         commands: [
+    //           'cd CDK',
+    //           'cd lambda',
+    //           "yarn"
+    //         ]
+    //       }
+    //     },
+    //     artifacts: {
+    //       "base-directory": "lambda",
+    //       "discard-paths": "yes"
+    //     }
+    //   }),
+    //   environment: {
+    //     buildImage: CodeBuild.LinuxBuildImage.STANDARD_4_0
+    //   }
+    // });
 
     const sourceOutput = new CodePipeline.Artifact();
-    const cdkBuildOutput = new CodePipeline.Artifact('CdkBuildOutput');
+    // const cdkBuildOutput = new CodePipeline.Artifact('CdkBuildOutput');
     const s3BuildOutput = new CodePipeline.Artifact('Ls3BuildOutput');
-    const lambdaBuildOutput = new CodePipeline.Artifact('lambdaBuildOutput');
+    // const lambdaBuildOutput = new CodePipeline.Artifact('lambdaBuildOutput');
 
     // const code = codecommit.Repository.fromRepositoryName(this, 'ImportedRepo', "lollyAppAWSCDK");
 
@@ -302,18 +296,18 @@ export class CdkStack extends cdk.Stack {
               input: sourceOutput,
               outputs: [s3BuildOutput],
             }),
-            new CodePipelineAction.CodeBuildAction({
-              actionName: 'CDK_Build',
-              project: cdkBuild,
-              input: sourceOutput,
-              outputs: [cdkBuildOutput],
-            }),
-            new CodePipelineAction.CodeBuildAction({
-              actionName: 'LAMBDA_Build',
-              project: lambdaBuild,
-              input: sourceOutput,
-              outputs: [lambdaBuildOutput],
-            }),
+            // new CodePipelineAction.CodeBuildAction({
+            //   actionName: 'CDK_Build',
+            //   project: cdkBuild,
+            //   input: sourceOutput,
+            //   outputs: [cdkBuildOutput],
+            // }),
+            // new CodePipelineAction.CodeBuildAction({
+            //   actionName: 'LAMBDA_Build',
+            //   project: lambdaBuild,
+            //   input: sourceOutput,
+            //   outputs: [lambdaBuildOutput],
+            // }),
           ],
         },
         {

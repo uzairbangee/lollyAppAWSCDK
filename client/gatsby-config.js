@@ -12,10 +12,10 @@ module.exports = {
       options: {
         typeName: "Lolly",
         fieldName: "lolly",
-        url: "https://q3tnhlvz6jcjfnukr47gnm4gfm.appsync-api.us-east-2.amazonaws.com/graphql",
+        url: 'https://g5ij5sea4nhxdh4lfy4ykxpuqq.appsync-api.us-east-2.amazonaws.com/graphql',
         // HTTP headers
-        headers: {
-          "x-api-key": "da2-tws3q5kycbd43ka6mj7imj5gzi"
+        headers:{
+          "x-api-key": "da2-to7dcsrdezhv3ev2zkpvapxkgm"
         }
       },
     },

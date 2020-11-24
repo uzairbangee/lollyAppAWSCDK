@@ -245,7 +245,6 @@ export class CdkStack extends cdk.Stack {
     // const s3BuildOutput = new CodePipeline.Artifact();
     // const lambdaBuildOutput = new CodePipeline.Artifact('lambdaBuildOutput');
 
-    // const code = codecommit.Repository.fromRepositoryName(this, 'ImportedRepo', "lollyAppAWSCDK");
 
     // const pipline_main = new CodePipeline.Pipeline(this, 'LollyPipeline', {
     //   crossAccountKeys: false,
@@ -259,7 +258,7 @@ export class CdkStack extends cdk.Stack {
     //       actionName: 'Checkout',
     //       owner: 'uzairbangee',
     //       repo: "lollyAppAWSCDK",
-    //       oauthToken: cdk.SecretValue.secretsManager('GITHUB_TOKEN_AWS'),
+    //       oauthToken: cdk.SecretValue.secretsManager('GITHUB_TOKEN_AWS_SOURCE'),
     //       output: sourceOutput,
     //       trigger: CodePipelineAction.GitHubTrigger.WEBHOOK,
     //     }),

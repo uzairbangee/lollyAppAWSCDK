@@ -6,10 +6,11 @@ import * as s3 from '@aws-cdk/aws-s3'
 import * as s3Deployment from '@aws-cdk/aws-s3-deployment'
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as origins from '@aws-cdk/aws-cloudfront-origins';
-// import * as CodePipeline from '@aws-cdk/aws-codepipeline'
-// import * as CodePipelineAction from '@aws-cdk/aws-codepipeline-actions'
-// import * as CodeBuild from '@aws-cdk/aws-codebuild'
-// import * as lambda from '@aws-cdk/aws-lambda';
+import * as CodePipeline from '@aws-cdk/aws-codepipeline'
+import * as CodePipelineAction from '@aws-cdk/aws-codepipeline-actions'
+import * as CodeBuild from '@aws-cdk/aws-codebuild'
+import * as lambda from '@aws-cdk/aws-lambda';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -39,18 +40,19 @@ export class CdkStack extends cdk.Stack {
       value: api.apiKey || ""
     })
 
-    // const lolly_lambda = new lambda.Function(this, "LollyAddLambda", {
-    //   runtime: lambda.Runtime.NODEJS_12_X,
-    //   handler: 'index.handler',
-    //   code: lambda.Code.fromAsset("lambda")
-    // })
+    const lolly_lambda = new lambda.Function(this, "LollyAddLambda", {
+      runtime: lambda.Runtime.NODEJS_12_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset("lambda")
+    })
 
-    // const lambda_data_source = api.addLambdaDataSource("LamdaLollyDataSource", lolly_lambda);
+    const policy = new PolicyStatement();
+    policy.addActions('codepipeline:*');
+    policy.addResources('*');
 
-    // lambda_data_source.createResolver({
-    //   typeName: "Mutation",
-    //   fieldName: "createLolly"
-    // })
+    lolly_lambda.addToRolePolicy(policy);
+
+    const lambda_data_source = api.addLambdaDataSource("LamdaLollyDataSource", lolly_lambda);
 
     const lollyTable = new ddb.Table(this, 'lollyTables', {
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
@@ -62,31 +64,36 @@ export class CdkStack extends cdk.Stack {
 
     const db_data_source = api.addDynamoDbDataSource('LollyDataSources', lollyTable);
 
-    // lollyTable.grantFullAccess(lolly_lambda);
+    lollyTable.grantFullAccess(lolly_lambda);
 
-    // lolly_lambda.addEnvironment('Lolly_TABLE', lollyTable.tableName);
+    lolly_lambda.addEnvironment('Lolly_TABLE', lollyTable.tableName);
 
-    db_data_source.createResolver({
+    lambda_data_source.createResolver({
       typeName: "Mutation",
-      fieldName: "createLolly",
-      requestMappingTemplate : MappingTemplate.fromString(`
-        ## Automatically set the id if it's not passed in.
-        $util.qr($context.args.put("id", $util.defaultIfNull($ctx.args.id, $util.autoId())))
-
-        #set( $createdAt = $util.time.nowISO8601() )
-        $util.qr($context.args.put("createdAt", $util.defaultIfNull($ctx.args.createdAt, $createdAt)))
-
-        {
-          "version" : "2018-05-29",
-          "operation": "PutItem",
-          "key": {
-            "id":   $util.dynamodb.toDynamoDBJson($ctx.args.id)
-          },
-          "attributeValues": $util.dynamodb.toMapValuesJson($context.args)
-        }
-      `),
-        responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+      fieldName: "createLolly"
     })
+
+    // db_data_source.createResolver({
+    //   typeName: "Mutation",
+    //   fieldName: "createLolly",
+    //   requestMappingTemplate : MappingTemplate.fromString(`
+    //     ## Automatically set the id if it's not passed in.
+    //     $util.qr($context.args.put("id", $util.defaultIfNull($ctx.args.id, $util.autoId())))
+
+    //     #set( $createdAt = $util.time.nowISO8601() )
+    //     $util.qr($context.args.put("createdAt", $util.defaultIfNull($ctx.args.createdAt, $createdAt)))
+
+    //     {
+    //       "version" : "2018-05-29",
+    //       "operation": "PutItem",
+    //       "key": {
+    //         "id":   $util.dynamodb.toDynamoDBJson($ctx.args.id)
+    //       },
+    //       "attributeValues": $util.dynamodb.toMapValuesJson($context.args)
+    //     }
+    //   `),
+    //     responseMappingTemplate: MappingTemplate.dynamoDbResultItem()
+    // })
 
     db_data_source.createResolver({
       typeName: "Query",
@@ -240,30 +247,30 @@ export class CdkStack extends cdk.Stack {
     //   }
     // });
 
-    // const sourceOutput = new CodePipeline.Artifact();
-    // const cdkBuildOutput = new CodePipeline.Artifact('CdkBuildOutput');
+    const sourceOutput = new CodePipeline.Artifact();
+    const cdkBuildOutput = new CodePipeline.Artifact('CdkBuildOutput');
     // const s3BuildOutput = new CodePipeline.Artifact();
     // const lambdaBuildOutput = new CodePipeline.Artifact('lambdaBuildOutput');
 
 
-    // const pipline_main = new CodePipeline.Pipeline(this, 'LollyPipeline', {
-    //   crossAccountKeys: false,
-    //   restartExecutionOnUpdate: true,
-    // });
+    const pipline_main = new CodePipeline.Pipeline(this, 'LollyPipeline', {
+      crossAccountKeys: false,
+      restartExecutionOnUpdate: true,
+    });
 
-    // pipline_main.addStage({
-    //   stageName: 'Source',
-    //   actions: [
-    //     new CodePipelineAction.GitHubSourceAction({
-    //       actionName: 'Checkout',
-    //       owner: 'uzairbangee',
-    //       repo: "lollyAppAWSCDK",
-    //       oauthToken: cdk.SecretValue.secretsManager('GITHUB_TOKEN_AWS_SOURCE'),
-    //       output: sourceOutput,
-    //       trigger: CodePipelineAction.GitHubTrigger.WEBHOOK,
-    //     }),
-    //   ],
-    // })
+    pipline_main.addStage({
+      stageName: 'Source',
+      actions: [
+        new CodePipelineAction.GitHubSourceAction({
+          actionName: 'Checkout',
+          owner: 'uzairbangee',
+          repo: "lollyAppAWSCDK",
+          oauthToken: cdk.SecretValue.secretsManager('GITHUB_TOKEN_AWS_SOURCE'),
+          output: sourceOutput,
+          trigger: CodePipelineAction.GitHubTrigger.WEBHOOK,
+        }),
+      ],
+    })
 
     // pipline_main.addStage({
     //   stageName: 'Build',
@@ -289,18 +296,19 @@ export class CdkStack extends cdk.Stack {
     //   ],
     // })
 
-    // pipline_main.addStage({
-    //   stageName: 'Deploy',
-    //   actions: [
-    //     new CodePipelineAction.S3DeployAction({
-    //       actionName: 's3Build',
-    //       input: s3BuildOutput,
-    //       bucket: myBucket,
-    //     }),
-    //   ],
-    // })
+    pipline_main.addStage({
+      stageName: 'Deploy',
+      actions: [
+        new CodePipelineAction.S3DeployAction({
+          actionName: 's3Build',
+          input: sourceOutput,
+          bucket: myBucket,
+        }),
+      ],
+    })
 
-    // pipline_main.
+    lolly_lambda.addEnvironment("PIPLINE_NAME", pipline_main.pipelineName)
+
 
 
 

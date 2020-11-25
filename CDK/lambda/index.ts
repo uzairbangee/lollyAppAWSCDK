@@ -33,16 +33,11 @@ exports.handler = async (event: AppSyncEvent) => {
     try{
         const result = await client.put(params).promise();
         console.log(result);
-        codepipeline.startPipelineExecution({
-            name: "CdkStack-LollyPipeline196A152A-VPZ92NC3OQQJ"
-        }, function(err : any, res : any) {
-            if (err) {
-                console.log(err, err.stack);
-            }
-            else {
-                console.log(res);
-            }
-        });
+
+        const pipe = await codepipeline.startPipelineExecution({
+            name: process.env.PIPLINE_NAME
+        }).promise();
+
         return data;
     }
     catch(err) {
